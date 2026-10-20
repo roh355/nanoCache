@@ -43,6 +43,7 @@ bool read_u64(std::istream& in, std::uint64_t& value) {
 }  // namespace
 
 bool Cache::save_snapshot(const std::string& path) const {
+    std::lock_guard<std::mutex> lock(mutex_);
     const auto steady_now = Clock::now();
     const auto wall_now = std::chrono::system_clock::now();
 
@@ -132,6 +133,7 @@ bool Cache::save_snapshot(const std::string& path) const {
 }
 
 bool Cache::load_snapshot(const std::string& path) {
+    std::lock_guard<std::mutex> lock(mutex_);
     errno = 0;
     std::ifstream in(path, std::ios::binary);
     if (!in) return errno == ENOENT;  // No snapshot is normal on the first run.

@@ -81,16 +81,25 @@ std::string dispatch(const std::vector<std::string>& args, Cache& cache) {
         return encode_bulk(*value);
     }
 
+    if (cmd == "INCR") {
+        if (args.size() != 2) {
+            return encode_error("ERR wrong number of arguments for 'incr' command");
+        }
+
+        long long value = 0;
+        if (!cache.increment(args[1], value)) {
+            return encode_error("ERR value is not an integer or out of range");
+        }
+        return encode_integer(value);
+    }
+
     if (cmd == "DEL") {
         if (args.size() < 2) {
             return encode_error("ERR wrong number of arguments for 'del' command");
         }
 
-        long long removed = 0;
-        for (std::size_t i = 1; i < args.size(); ++i) {
-            if (cache.erase(args[i])) ++removed;
-        }
-        return encode_integer(removed);
+        const std::vector<std::string> keys(args.begin() + 1, args.end());
+        return encode_integer(cache.erase_many(keys));
     }
 
     if (cmd == "EXPIRE") {
